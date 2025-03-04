@@ -1,0 +1,8 @@
+name: Sign-in with Ethereum
+type: module
+description: Provides SIWE authentication for Drupal
+package: SIWE
+core_version_requirement: ^9 || ^10
+dependencies:
+  - jsonapi
+  - jsonapi_extras

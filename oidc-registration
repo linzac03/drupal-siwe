@@ -1,0 +1,7 @@
+{
+  "client_id":"509f9aa3-a78d-4d69-a61b-1544b31513d2",
+  "client_secret":"Jo3T3gkQh4sQmyoz",
+  "registration_access_token":"QqpvP6cQYhJ",
+  "registration_client_uri":"https://oidc.signinwithethereum.org/client/509f9aa3-a78d-4d69-a61b-1544b31513d2",
+  "redirect_uris":["https://drupal-siwe.ddev.site/oidc/login-redirect"]
+}

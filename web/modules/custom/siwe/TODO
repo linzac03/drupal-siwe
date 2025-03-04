@@ -1,0 +1,183 @@
+controller for endpoints
+  - /nonce
+    generate a nonce value to store in the user's session
+    return the nonce to the client
+
+  - /verify
+    check for body message
+    generate SIWEMessage
+    try {
+      $message = SIWEMessage.verify(req.body.signature, req.session.nonce)
+      on verify: req.session.siwe = message
+    } catch (e) {
+      null out siwe and nonce in session
+      error types: EXPIRED_MESSAGE | INVALID_SIGNATURE
+    }
+
+the actual verify method:
+  - check invalidParams
+    export const VerifyParamsKeys: Array<keyof VerifyParams> = [
+      'signature',
+      'domain',
+      'nonce',
+      'time',
+    ];
+
+  - check invalidOpts
+    export const VerifyOptsKeys: Array<keyof VerifyOpts> = [
+      'provider',
+      'suppressExceptions',
+      'verificationFallback',
+    ];
+
+  - params: const { signature, domain, nonce, time } = params;
+
+  - do verification work:
+      /** Domain binding */
+      if (domain && domain !== this.domain) {
+        fail({
+          success: false,
+          data: this,
+          error: new SiweError(
+            SiweErrorType.DOMAIN_MISMATCH,
+            domain,
+            this.domain
+          ),
+        });
+      }
+
+      /** Nonce binding */
+      if (nonce && nonce !== this.nonce) {
+        fail({
+          success: false,
+          data: this,
+          error: new SiweError(SiweErrorType.NONCE_MISMATCH, nonce, this.nonce),
+        });
+      }
+
+      /** Check time or now */
+      const checkTime = new Date(time || new Date());
+
+      /** Message not expired */
+      if (this.expirationTime) {
+        const expirationDate = new Date(this.expirationTime);
+        if (checkTime.getTime() >= expirationDate.getTime()) {
+          fail({
+            success: false,
+            data: this,
+            error: new SiweError(
+              SiweErrorType.EXPIRED_MESSAGE,
+              `${checkTime.toISOString()} < ${expirationDate.toISOString()}`,
+              `${checkTime.toISOString()} >= ${expirationDate.toISOString()}`
+            ),
+          });
+        }
+      }
+
+      /** Message is valid already */
+      if (this.notBefore) {
+        const notBefore = new Date(this.notBefore);
+        if (checkTime.getTime() < notBefore.getTime()) {
+          fail({
+            success: false,
+            data: this,
+            error: new SiweError(
+              SiweErrorType.NOT_YET_VALID_MESSAGE,
+              `${checkTime.toISOString()} >= ${notBefore.toISOString()}`,
+              `${checkTime.toISOString()} < ${notBefore.toISOString()}`
+            ),
+          });
+        }
+      }
+      let EIP4361Message;
+      try {
+        EIP4361Message = this.prepareMessage();
+      } catch (e) {
+        fail({
+          success: false,
+          data: this,
+          error: e,
+        });
+      }
+
+      /** Recover address from signature */
+      let addr;
+      try {
+        addr = verifyMessage(EIP4361Message, signature);
+      } catch (e) {
+        console.error(e);
+      }
+      /** Match signature with message's address */
+      if (addr === this.address) {
+        return resolve({
+          success: true,
+          data: this,
+        });
+      } else {
+        const EIP1271Promise = checkContractWalletSignature(this, signature, opts.provider)
+          .then(isValid => {
+            if (!isValid) {
+              return {
+                success: false,
+                data: this,
+                error: new SiweError(
+                  SiweErrorType.INVALID_SIGNATURE,
+                  addr,
+                  `Resolved address to be ${this.address}`
+                ),
+              };
+            }
+            return {
+              success: true,
+              data: this,
+            };
+          })
+          .catch(error => {
+            return {
+              success: false,
+              data: this,
+              error,
+            };
+          });
+
+        Promise.all([
+          EIP1271Promise,
+          opts?.verificationFallback?.(params, opts, this, EIP1271Promise)?.then(res => res)?.catch((res: SiweResponse) => res)
+        ]).then(([EIP1271Response, fallbackResponse]) => {
+          if (fallbackResponse) {
+            if (fallbackResponse.success) {
+              return resolve(fallbackResponse);
+            } else {
+              fail(fallbackResponse);
+            }
+          } else {
+            if (EIP1271Response.success) {
+              return resolve(EIP1271Response);
+            }
+            else {
+              fail(EIP1271Response);
+            }
+          }
+        });
+      }
+    });
+  }
+
+  - prepareMessage: 
+    prepareMessage(): string {
+    let message: string;
+    switch (this.version) {
+      case '1': {
+        message = this.toMessage();
+        break;
+      }
+
+      default: {
+        message = this.toMessage();
+        break;
+      }
+    }
+    return message;
+  }
+
+  - 

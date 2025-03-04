@@ -1,0 +1,6 @@
+siwe.settings_form:
+  title: 'Sign-in with Ethereum'
+  description: 'Configure Sign-in with Ethereum.'
+  parent: system.admin_config_system
+  route_name: siwe.settings_form
+  weight: 10

@@ -1,0 +1,8 @@
+# Schema for the configuration files of the Sign-in with Ethereum module.
+# siwe.settings:
+  # type: config_object
+  # label: 'Sign-in with Ethereum settings'
+  # mapping:
+    # example:
+      # type: string
+      # label: 'Example'

@@ -1,0 +1,22 @@
+<?php
+
+function account_display_preprocess_user(&$variables) {
+  $user = $variables['elements']['#user'];
+  $preferred_name = $user->get('field_preferred_name')->value;
+  if (!empty($preferred_name)) {
+    $variables['content']['display_name'][0]['#context']['value'] = $preferred_name;
+  }
+}
+
+function account_display_entity_presave($entity) {
+  // if user
+  if ($entity->getEntityTypeId() !== 'user') {
+    return;
+  }
+  // check of mail matches an email address
+  // if not, give it one at the domain of the site
+  $mail = $entity->get('mail')->value;
+  if (!filter_var($mail, FILTER_VALIDATE_EMAIL)) {
+    $entity->setEmail($mail . '@' . \Drupal::request()->getHost());
+  }
+}

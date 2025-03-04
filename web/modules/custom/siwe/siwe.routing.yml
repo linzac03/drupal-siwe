@@ -1,0 +1,21 @@
+siwe.nonce:
+  path: '/siwe/nonce'
+  defaults:
+    _controller: '\Drupal\siwe\Controller\SiweController::nonce'
+  requirements:
+    _access: 'TRUE'
+
+siwe.verify:
+  path: '/siwe/verify'
+  defaults:
+    _controller: '\Drupal\siwe\Controller\SiweController::verify'
+  requirements:
+    _access: 'TRUE'
+
+siwe.settings_form:
+  path: '/admin/config/system/siwe'
+  defaults:
+    _title: 'Sign-in with Ethereum settings'
+    _form: 'Drupal\siwe\Form\SettingsForm'
+  requirements:
+    _permission: 'administer siwe configuration'

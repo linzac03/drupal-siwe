@@ -1,0 +1,6 @@
+services:
+  siwe.event_subscriber:
+    class: Drupal\siwe\EventSubscriber\SiweSubscriber
+    arguments: ['@messenger']
+    tags:
+      - { name: event_subscriber }

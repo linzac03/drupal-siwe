@@ -1,0 +1,6 @@
+name: Account Display
+type: module
+description: Example to manage display name
+package: custom
+core_version_requirement: ^9 || ^10
+
